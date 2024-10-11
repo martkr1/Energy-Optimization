@@ -9,6 +9,7 @@ class Sim:
         self.timeline = timeline 
         self.app = app
         self.ctrl_step = 1
+        self.action_space = [1, -1, 0] # Controller change is (up, down, stay)
 
 
     def import_variables(self, file):
@@ -114,12 +115,14 @@ class Sim:
     def step(self, action, terminated:bool = False, truncated:bool = False, step_change:float = 0.1):
         """Setpoint change on the provided controllers and simulation reaction"""
 
+        #NOTE! action should array of floats - ensure this!
+
         a = np.sum(self.state[1]) #Energy consumption before setpoint change
 
         for index, row in self.df["Ctrl"].iterrows():
             var_class = self.timeline.get_variable(self.app, variable_name = row["Block Name"]+":"+row["Variable Name"])
             prev_setpoint = var_class.get_value(row["Unit"])
-            setpoint = prev_setpoint + action[index]*step_change
+            setpoint = prev_setpoint + self.action_space[int(action[index].item())]*step_change
             var_class.set_value(setpoint, row["Unit"])
 
         self.progress_list = [i for i in range(len(self.df["Input"]["Block Name"]))]
@@ -136,12 +139,11 @@ class Sim:
         return self.state, self.reward(a, b), terminated, truncated
     
 
-    def reset(self, pause:bool=True):
+    def reset(self):
         #NOTE is there another way to do this? quite slow
-        if pause == True:
+        if self.timeline.achieved_speed > 0.0:
             self.timeline.pause()
         self.timeline.load_initial_condition(self.timeline.current_initial_condition) 
-        self.timeline.set_speed(10)
         self.timeline.run()  
 
         return self.state
@@ -151,4 +153,4 @@ class Sim:
         if arg == "action":
             # action should be up (up, down, stay) for each controller where up and down is a change
             # with a predefined increment. 
-            return np.random.choice([1, -1, 0], len(self.df["Ctrl"]["Block Name"]))
+            return np.random.choice([0, 1, 2], len(self.df["Ctrl"]["Block Name"]))
