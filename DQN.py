@@ -31,7 +31,6 @@ class DQN(nn.Module):
     def forward(self, x):
         # used in __call__
         x = torch.tensor(x)
-        print(x.type(), 'hei')
         x = F.relu(self.layer1(x))
         x = F.relu(self.layer2(x))
         return self.layer3(x)
