@@ -5,9 +5,9 @@ Currently containing a simple definition of a MLP network
 
 ## enviroment - Communicating with the K-spice process simulator
 Contains the main functionality for communicating with the K-Spice library. 
- - env_workbook is a jupyter notebook illustarting the functionality og the enviroment class.
+ - env_workbook is a jupyter notebook illustarting the functionality of the enviroment class.
 
-- [ ] Implement slugging as randsomness in env.reset
+- [ ] Implement slugging as randomness in env.reset
 
 
 
