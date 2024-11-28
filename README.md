@@ -16,6 +16,7 @@ Main functionality:
 - [x] step(): use a polling func to update variables
 - [x] reset(): re-load initial conditions to reset simulator
 - [ ] Implement slugging as randomness in env.reset
+- [ ] Terminated: functionality such that simulator resets if trip is reached. Trip limit needs to be provided to the simulator (via the excel sheet?)
 
 ## workbook - Jupyter notebook as final interface
 Combining DQN and enviroment
