@@ -4,15 +4,7 @@ import torch.nn.functional as F
 
 
 """
-This is a simple model which works for a model having n_states different scalar observations 
-but can only adjust one controller n_actions different ways (up, down, stay). When multiple controllers
-are included we need some configuration of the network(s) that produces the output 
-[(p_1, p_2, p_3)_1, .. , (p_1, p_2, p_3)_n] where n is the number of controllers and p_i is the 
-probabilities of each action. 
-
-Why probabilities and not just actions directy? 
-with probabilities we allow for exploitation and can continusly adjust the prob of taking a 
-particular action. 
+Multi-Layer Perceptron with one hidden layer.
 
 """
 
