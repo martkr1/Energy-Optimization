@@ -19,6 +19,8 @@ Main functionality:
 - [ ] Terminated: functionality such that simulator resets if trip is reached. Trip limit needs to be provided to the simulator (via the excel sheet?)
 
 ## workbook - Jupyter notebook as final interface
+- workbook - one ctrl learning
+- workbook 2 ctrl - 2 ctrl learning
 Combining DQN and enviroment
 - [x] Select action - function for choosing next action
 - [x] Memory
