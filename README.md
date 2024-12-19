@@ -21,11 +21,10 @@ Main functionality:
 ## workbook - Jupyter notebook as final interface
 Combining DQN and enviroment
 
-- workbook - one ctrl learning
-- workbook 2 ctrl - 2 ctrl learning
+- new_wb.ipynb - one or two ctrl learning
   
 - [x] Select action - function for choosing next action
 - [x] Memory
 - [x] Optimizer - First draft complete
 - [x] Trainer - First draft complete
-- [ ] Upscale to multible controllers 
+- [x] Upscale to multible controllers 
