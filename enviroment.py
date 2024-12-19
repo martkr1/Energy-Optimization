@@ -1,4 +1,5 @@
 from polling import TimeoutException, poll
+from itertools import product
 import pandas as pd
 import numpy as np
 
@@ -26,34 +27,27 @@ class Sim:
 
         if key in ["Input", "Ctrl", "Output"]:
 
-            for index, row in self.df[key].iterrows():
-                name = row["Block Name"]+":"+row["Variable Name"]
-                try: #Jumps over blocks that does not exists and empty cells with a warning (Number of rows in df is chosen by the column with the most rows, input, output and ctrl should be equal but not global kpi.) 
-                    # If there exists empty cell inbetween rows, this will ignore the values after the empty cell. #NOTE consider adding functionality to ensure this does not occur.
-                    _ = self.timeline.get_value(self.app, name, row["Unit"])
-                except ValueError:
-                    if row["Block Name"] == "":
-                        print("Only {} rows in {}".format(index, key))
-                    else:
-                        print("Block {} does not have a value, check if the block exists".format(row["Block Name"]))
-                    break
-        
+            iter = self.df[key].iterrows()
+
         elif key == "Global KPI":
 
-            for index, row in self.df_gkpi.iterrows():
-                name = row["Block Name"]+":"+row["Variable Name"]
-                try: #Jumps over blocks that does not exists and empty cells with a warning (Number of rows in df is chosen by the column with the most rows, input, output and ctrl should be equal but not global kpi.) 
-                    # If there exists empty cell inbetween rows, this will ignore the values after the empty cell. #NOTE consider adding functionality to ensure this does not occur.
-                    _ = self.timeline.get_value(self.app, name, row["Unit"])
-                except ValueError:
-                    if row["Block Name"] == "":
-                        print("Only {} rows in {}".format(index, key))
-                    else:
-                        print("Block {} does not have a value, check if the block exists".format(row["Block Name"]))
-                    break            
+            iter = self.df_gkpi.iterrows()
+
         else:
             print("Key is not valid")
 
+        for index, row in iter:
+            name = row["Block Name"]+":"+row["Variable Name"]
+            try: #Jumps over blocks that does not exists and empty cells with a warning (Number of rows in df is chosen by the column with the most rows, input, output and ctrl should be equal but not global kpi.) 
+                # If there exists empty cell inbetween rows, this will ignore the values after the empty cell. #NOTE consider adding functionality to ensure this does not occur.
+                _ = self.timeline.get_value(self.app, name, row["Unit"])
+                print(name, u'\u2713') #fancy checkmark
+            except ValueError:
+                if row["Block Name"] == "":
+                    print("Only {} rows in {}".format(index, key))
+                else:
+                    print("Block {} does not have a value, check if the block exists".format(row["Block Name"]))
+                break
         return
 
 
@@ -93,21 +87,20 @@ class Sim:
         for index, e in enumerate(a):
             if (index in self.progress_list) and (e < 0.1):
                 self.progress_list.remove(index)
-                print("{} has reached its setpoint {} [{}]".format(self.df["Input"]["Block Name"][index], input_vals[index], self.df["Input"]["Unit"][index]))
-                print(self.progress_list)
+                print("{} has reached its setpoint {} [{}], prog.list: {} \n".format(self.df["Input"]["Block Name"][index], input_vals[index], self.df["Input"]["Unit"][index], self.progress_list))
 
-        if not self.progress_list:
+        if not self.progress_list: 
             return 0.0 # All blocks has reached its setpoint
             
         return self.timeline.achieved_speed
 
 
     def reward(self, a, b):
-        """The reward should be a function of energy consumption #NOTE here we add additional criteria later production, .. etc. 
+        """The reward is now a function purely of one variable: energy consumption. #NOTE here we can add additional criteria later: production volume, .. etc. 
         1. The consumption goes up -> r = -1
         2. The consumtion goes down -> r = +1 """ 
         
-        if np.abs(a)-np.abs(b) > 0: # (gas export - power consumption) before and after step. 
+        if np.abs(a)-np.abs(b) > 0: # power consumption before and after step. 
             return 1
         else: 
             return -1
@@ -115,7 +108,7 @@ class Sim:
     def step(self, action, terminated:bool = False, truncated:bool = False, step_change:float = 0.1):
         """Setpoint change on the provided controllers and simulation reaction"""
 
-        #NOTE! action should array of floats - ensure this!
+        #NOTE! action should be array of floats - ensure this!
 
         a = np.sum(self.state[1]) #Energy consumption before setpoint change
 
@@ -123,6 +116,10 @@ class Sim:
             var_class = self.timeline.get_variable(self.app, variable_name = row["Block Name"]+":"+row["Variable Name"])
             prev_setpoint = var_class.get_value(row["Unit"])
             setpoint = prev_setpoint + self.action_space[int(action[index].item())]*step_change
+            if setpoint < 0:
+                # does there exist controllers where negative values are valid? 
+                # K-spice jumps to initial cond. if negative values are provided. 
+                setpoint = prev_setpoint
             var_class.set_value(setpoint, row["Unit"])
 
         self.progress_list = [i for i in range(len(self.df["Input"]["Block Name"]))]
@@ -132,7 +129,7 @@ class Sim:
             print("Timeout reached")
             Truncated = True
 
-        terminated = None #-> alarm/trip reached #NOTE not implemented
+        terminated = None #-> alarm/trip reached #NOTE not implemented 
 
         b = np.sum(self.state[1]) #Energy consumption after setpoint change
         
@@ -143,7 +140,7 @@ class Sim:
         #NOTE is there another way to do this? quite slow
         if self.timeline.achieved_speed > 0.0:
             self.timeline.pause()
-        self.timeline.load_initial_condition(self.timeline.current_initial_condition) 
+        self.timeline.load_initial_condition(self.timeline.current_initial_condition)
         self.timeline.run()  
 
         return self.state
@@ -154,3 +151,7 @@ class Sim:
             # action should be up (up, down, stay) for each controller where up and down is a change
             # with a predefined increment. 
             return np.random.choice([0, 1, 2], len(self.df["Ctrl"]["Block Name"]))
+        
+    @property
+    def action_pairs(self):
+        return [pair for pair in product([0, 1, 2], repeat = len(self.sample("action")))]
