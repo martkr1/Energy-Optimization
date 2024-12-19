@@ -1,7 +1,7 @@
 # Energy Optimization using K-Spice and Reinforcement learning
 
 ## DQN (Deep Q-network) - Defining our ML model
-Currently containing a simple definition of a MLP network. The input nodes represent the state of the simulator, i.e. the input vals, ctrl vals and global KPIs provdied in the excel sheet an fed to the network as a flattened tensor. 
+Currently containing a simple definition of a MLP network. The input nodes represent the state of the simulator, i.e. the input vals, ctrl vals and global KPIs provdied in the excel sheet and provided to the network as a flattened tensor. 
 The output nodes represents each possible action, i.e. if we have two controllers both only able to do one of the following actions: up, down, stay, the output layer would containt all combinations of these actions for two controllers (up,down,stay)^2 -> 9 nodes. 
 The network will output the "probability" of choosing an action and we'll always choose the action corresponding to the node in the output layer with the highest value.
 
@@ -27,4 +27,5 @@ Combining DQN and enviroment
 - [x] Memory
 - [x] Optimizer - First draft complete
 - [x] Trainer - First draft complete
-- [x] Upscale to multible controllers 
+- [x] Upscale to multible controllers input/Ctrl
+- [ ] Upscale to multible Global KPIs (this only makes sense for an updated reward function)
